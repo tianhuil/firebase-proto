@@ -1,0 +1,55 @@
+{
+  "name": "firebase-proto",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --detectOpenHandles"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tianhuil/firebase-proto.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tianhuil/firebase-proto/issues"
+  },
+  "homepage": "https://github.com/tianhuil/firebase-proto#readme",
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": false,
+    "singleQuote": true,
+    "jsxSingleQuote": true,
+    "bracketSpacing": true,
+    "useTabs": false
+  },
+  "eslintConfig": {
+    "extends": [
+      "next/core-web-vitals"
+    ],
+    "rules": {
+      "react/jsx-curly-brace-presence": [
+        "error",
+        {
+          "props": "never",
+          "children": "never"
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@types/jest": "^27.5.1",
+    "eslint": "^8.15.0",
+    "eslint-config-prettier": "^8.5.0",
+    "firebase-tools": "^11.0.0",
+    "jest": "^28.0.0",
+    "ts-jest": "^28.0.2",
+    "type-assertions": "^1.1.0",
+    "typescript": "^4.6.4"
+  },
+  "dependencies": {
+    "firebase": "^9.8.1"
+  }
+}
