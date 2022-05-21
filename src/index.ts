@@ -44,19 +44,6 @@ export const query = <T>(
   ...queryConstraints: IQueryConstraint<T>[]
 ): firestore.Query<T> => firestore.query(query_, ...queryConstraints)
 
-/**
- * Filter conditions in a {@link where} clause are specified using the
- * strings '&lt;', '&lt;=', '==', '!=', '&gt;=', '&gt;', 'array-contains', 'in',
- * 'array-contains-any', and 'not-in'.
- */
-export type WhereFilterOp<T> = T extends boolean | undefined | null
-  ? '==' | '!='
-  : T extends string | number
-  ? '<' | '<=' | '==' | '!=' | '>=' | '>'
-  : T extends Array<unknown>
-  ? 'array-contains' | 'array-contains-any'
-  : never
-
 export declare type WhereData<T> = T extends firestore.Primitive
   ? T
   : T extends {}
@@ -77,18 +64,38 @@ export declare type ChildUpdateFields<K extends string, V> = V extends Record<
   ? firestore.AddPrefixToKeys<K, WhereData<V>>
   : never
 
-type SingleWhereData<T> = {
-  [K in keyof WhereData<T>]: WhereData<T>[K] extends Array<unknown>
-    ? never
-    : WhereData<T>[K]
-}
+/**
+ * Filter conditions in a {@link where} clause are specified using the
+ * strings '&lt;', '&lt;=', '==', '!=', '&gt;=', '&gt;', 'array-contains', 'in',
+ * 'array-contains-any', and 'not-in'.
+ */
+export type WhereFilterOp<T> =
+  | 'in'
+  | 'not-in'
+  | '=='
+  | '!='
+  | (T extends string | number
+      ? '<' | '<=' | '>=' | '>'
+      : T extends Array<unknown>
+      ? 'array-contains' | 'array-contains-any'
+      : never)
 
-type ArrayWhereData<T> = {
-  [K in keyof WhereData<T>]: WhereData<T>[K] extends Array<unknown>
-    ? WhereData<T>[K]
+export type WhereValue<T, Op extends firestore.WhereFilterOp> = Op extends
+  | '=='
+  | '!='
+  | '<'
+  | '<='
+  | '>='
+  | '>'
+  | 'array-contains-any'
+  ? T
+  : Op extends 'in' | 'not-in'
+  ? T[]
+  : Op extends 'array-contains'
+  ? T extends Array<infer R>
+    ? R
     : never
-}
-
+  : never
 /**
  * Creates a {@link QueryConstraint} that enforces that documents must contain the
  * specified field and that the value should satisfy the relation constraint
@@ -100,36 +107,15 @@ type ArrayWhereData<T> = {
  * @param value - The value for comparison
  * @returns The created {@link Query}.
  */
-export function where<T, K extends keyof SingleWhereData<T>>(
+export function where<
+  T extends Record<string, unknown>,
+  K extends keyof WhereData<T> & string
+>(
   fieldPath: K,
-  opStr: WhereFilterOp<SingleWhereData<T>[K]>,
-  value: SingleWhereData<T>[K]
-): IQueryConstraint<T>
-export function where<T, K extends keyof WhereData<T>>(
-  fieldPath: K,
-  opStr: 'in' | 'not-in',
-  value: Array<WhereData<T>[K]>
-): IQueryConstraint<T>
-export function where<T, K extends keyof ArrayWhereData<T>>(
-  fieldPath: K,
-  opStr: 'array-contains',
-  value: ArrayWhereData<T>[K][number]
-): IQueryConstraint<T>
-export function where<T, K extends keyof ArrayWhereData<T>>(
-  fieldPath: K,
-  opStr: 'array-contains-any',
-  value: ArrayWhereData<T>[K]
-): IQueryConstraint<T>
-export function where<T>(
-  fieldPath: unknown,
-  opStr: unknown,
-  value: unknown
+  opStr: WhereFilterOp<WhereData<T>[K]>,
+  value: WhereValue<WhereData<T>[K], WhereFilterOp<WhereData<T>[K]>>
 ): IQueryConstraint<T> {
-  return firestore.where(
-    fieldPath as string,
-    opStr as firestore.WhereFilterOp,
-    value as unknown
-  )
+  return firestore.where(fieldPath, opStr, value)
 }
 
 /**
