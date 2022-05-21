@@ -41,6 +41,11 @@ test('query single-field  object [no result]', async () => {
   expect(qs.docs.map((d) => d.data())).toStrictEqual([])
 })
 
+test("query 'in' for object", async () => {
+  const qs = await getDocs(query(col, where('o', 'in', [{ s: 'x' }])))
+  expect(qs.docs.map((d) => d.data())).toStrictEqual([data[0]])
+})
+
 test('query two-field object', async () => {
   const qs = await getDocs(query(col, where('o', '==', { s: 'x', n: 1 })))
   expect(qs.docs.map((d) => d.data())).toStrictEqual([data[1]])
@@ -51,8 +56,13 @@ test('query two-field object [no result]', async () => {
   expect(qs.docs.map((d) => d.data())).toStrictEqual([])
 })
 
-test('query an array', async () => {
+test('query == for array', async () => {
   const qs = await getDocs(query(col, where('an', '==', [1, 2])))
+  expect(qs.docs.map((d) => d.data())).toStrictEqual([data[2]])
+})
+
+test("query 'in' for array", async () => {
+  const qs = await getDocs(query(col, where('an', 'in', [[1, 2]])))
   expect(qs.docs.map((d) => d.data())).toStrictEqual([data[2]])
 })
 
