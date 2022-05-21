@@ -7,19 +7,22 @@ import {
   doc,
   getDocs,
   getFirestore,
-  query,
   updateDoc,
-  where,
 } from 'firebase/firestore'
+import { orderBy, query, where, WhereData } from '../src'
 import { firebaseConfig } from './config.secret'
 
 export const app = initializeApp(firebaseConfig)
 export const db = getFirestore(app)
 
-interface Schema {
+type Schema = {
   name: string
   emails: string[]
   address: {
+    parts?: {
+      number: number
+      street: string
+    }
     address: string
     postal: number
   }
@@ -32,7 +35,7 @@ const aliceData: Schema = {
   emails: [],
   address: {
     address: '123 Road',
-    postal: 1,
+    postal: 2,
   },
 }
 
@@ -41,9 +44,11 @@ const bobData: Schema = {
   emails: [],
   address: {
     address: '456 Road',
-    postal: 2,
+    postal: 1,
   },
 }
+
+type X = WhereData<Schema>
 
 beforeEach(async () => {
   await Promise.all([addDoc(col, aliceData), addDoc(col, bobData)])
@@ -60,7 +65,7 @@ test('should query a direct field', async () => {
 })
 
 test('should query an embedded field', async () => {
-  const qs = await getDocs(query(col, where('address.postal', '==', 2)))
+  const qs = await getDocs(query(col, where('address.postal', '==', 1)))
   expect(qs.docs.map((d) => d.data())).toStrictEqual([bobData])
 })
 
@@ -93,4 +98,14 @@ test('should update a dot field', async () => {
   ).toStrictEqual([
     { ...aliceData, address: { ...aliceData.address, postal: 3 } },
   ])
+})
+
+test('should orderBy a field', async () => {
+  const qs = await getDocs(query(col, orderBy('name')))
+  expect(qs.docs.map((d) => d.data())).toStrictEqual([aliceData, bobData])
+})
+
+test('should orderBy a dot field', async () => {
+  const qs = await getDocs(query(col, orderBy('address.postal')))
+  expect(qs.docs.map((d) => d.data())).toStrictEqual([bobData, aliceData])
 })
